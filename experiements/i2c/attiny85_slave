@@ -1,0 +1,32 @@
+#include <TinyWireS.h>
+
+const byte SLAVE_ADDRESS = 100;
+
+const int MAX_INPUT_VOLTAGE = 5;
+
+volatile byte data = 13;
+
+void setup() {
+  pinMode(1, OUTPUT);
+  
+  TinyWireS.begin(SLAVE_ADDRESS);
+  TinyWireS.onRequest(requested);
+  TinyWireS.onReceive(received);
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+}
+
+void received(uint8_t recv) {
+  data = (byte) recv;
+}
+
+void requested() {
+//  while (TinyWireS.available()) {
+//    int inp = analogRead(0);
+//    TinyWireS.write(inp);
+//  }
+  TinyWireS.write(data);
+}
