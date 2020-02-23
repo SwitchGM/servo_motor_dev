@@ -1,0 +1,35 @@
+#include <Wire.h>
+
+const byte SLAVE_ADDRESS = 100;
+
+long timeNow = millis();
+
+void setup() {
+  Serial.begin(9600);
+  
+  Serial.println("Joining i2c bus...\n");
+  Wire.begin();
+}
+
+void loop() {
+  if (millis() - timeNow >= 750) {
+    byte randByte = random(0, 255);
+    Serial.println(String("Random byte chosen " + (String) randByte + " ...\n"));
+
+    Serial.println("Beginning transmission with slave...\n");
+    Wire.beginTransmission(SLAVE_ADDRESS);
+    
+    Serial.println(String("Sending " + (String) randByte + " to slave...\n"));
+    Wire.write(randByte);
+
+    Serial.println("Requesting byte back from slave...\n");
+    Wire.requestFrom((uint8_t) SLAVE_ADDRESS, (uint8_t) 1);
+
+    Serial.println("Reading requested byte...\n");
+    byte recvByte = Wire.read();
+
+    Serial.println(String("Recieved byte is " + (String) recvByte + " ...\n"));
+
+    timeNow = millis();
+  }
+}
