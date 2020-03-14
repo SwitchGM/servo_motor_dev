@@ -1,32 +1,79 @@
 #include <TinyWireS.h>
 
-const byte SLAVE_ADDRESS = 100;
 
-const int MAX_INPUT_VOLTAGE = 5;
+const byte SLAVE_ADDRESS = 100; // the i2c slaves address
+const int NUMBER_OF_BYTES = 3; // the depth of i2c command bytes
+const int ANGLE_MAP_DETAIL = 3;
 
-volatile byte data = 13;
+volatile byte data = 0;
+volatile int angleMap[ANGLE_MAP_DETAIL][3] = { {0, 0, -90}, {512, 50, 0}, {1024, 100, 90} };
+/*
+ * Angle Map
+ * - Pot Val as whatever the processor reads it to be 
+ * - PWM as percentage
+ * - Angle in degrees
+ */
 
 void setup() {
   pinMode(1, OUTPUT);
+  pinMode(3, OUTPUT);
   
-  TinyWireS.begin(SLAVE_ADDRESS);
-  TinyWireS.onRequest(requested);
-  TinyWireS.onReceive(received);
+//  TinyWireS.begin(SLAVE_ADDRESS);
+//  TinyWireS.onRequest(requested);
+//  TinyWireS.onReceive(received);
+
+  pinMode(0, OUTPUT);
+  pinMode(1, OUTPUT);
+
+  // Setup the PWM clock to ~62.5Hz for the servos.
+  TCCR0A = 2<<COM0A0 | 2<<COM0B0 | 3<<WGM00;
+  TCCR0B = 0<<WGM02 | 1<<CS00 | 1<<CS01 | 0<<CS02;
+
+  OCR0B = 100;
+  OCR0A = 100;
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
+  OCR0B = 80;
+  delay(5000);
+  OCR0B = 100;
+  delay(2000);
 }
 
-void received(uint8_t recv) {
-  data = (byte) recv;
+int mapPotValToPWM(int potVal) {
+  for (int i = 0; i < ANGLE_MAP_DETAIL; i++) {
+    if (angleMap[i - 1][0] < potVal and angleMap[i][0] > potVal) {
+      return map(angleMap[i - 1][0], angleMap[i][0], angleMap[i - 1][1], angleMap[i][1], potVal);
+      
+    } else if (angleMap[i][0] < potVal and angleMap[i + 1][0] > potVal) {
+      return map(angleMap[i][0], angleMap[i + 1][0], angleMap[i][1], angleMap[i + 1][1], potVal);
+      
+    }
+  }
+
+  return 0;
+}
+
+int mapAngleToPWM(int angle) {
+  for (int i = 0; i < ANGLE_MAP_DETAIL; i++) {
+    if (angleMap[i - 1][2] < angle and angleMap[i][2] > angle) {
+      return map(angleMap[i - 1][2], angleMap[i][2], angleMap[i - 1][1], angleMap[i][1], angle);
+      
+    } else if (angleMap[i][2] < angle and angleMap[i + 1][2] > angle) {
+      return map(angleMap[i][2], angleMap[i + 1][2], angleMap[i][1], angleMap[i + 1][1], angle);
+      
+    }
+  }
+
+  return 0;
+}
+
+void received(uint8_t n) {  // always read 5 bits !!!
+  data = TinyWireS.read();
 }
 
 void requested() {
-//  while (TinyWireS.available()) {
-//    int inp = analogRead(0);
-//    TinyWireS.write(inp);
-//  }
+  // write everything individually ?
+
   TinyWireS.write(data);
 }
