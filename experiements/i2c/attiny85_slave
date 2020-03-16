@@ -14,30 +14,64 @@ volatile int angleMap[ANGLE_MAP_DETAIL][3] = { {0, 0, -90}, {512, 50, 0}, {1024,
  * - Angle in degrees
  */
 
-void setup() {
-  pinMode(1, OUTPUT);
-  pinMode(3, OUTPUT);
-  
-//  TinyWireS.begin(SLAVE_ADDRESS);
-//  TinyWireS.onRequest(requested);
-//  TinyWireS.onReceive(received);
+void setup() {  
+  //  TinyWireS.begin(SLAVE_ADDRESS);
+  //  TinyWireS.onRequest(requested);
+  //  TinyWireS.onReceive(received);
 
-  pinMode(0, OUTPUT);
+//  setup_hardware_pwm();
+  setup_analog_pwm();
+}
+
+void setup_hardware_pwm() {
+//  pinMode(0, OUTPUT);
   pinMode(1, OUTPUT);
 
   // Setup the PWM clock to ~62.5Hz for the servos.
-  TCCR0A = 2<<COM0A0 | 2<<COM0B0 | 3<<WGM00;
+  TCCR0A = 0<<COM0A0 | 2<<COM0B0 | 3<<WGM00;
   TCCR0B = 0<<WGM02 | 1<<CS00 | 1<<CS01 | 0<<CS02;
 
-  OCR0B = 100;
-  OCR0A = 100;
+  OCR0B = 0;
+//  OCR0A = 100;
+}
+
+void setup_analog_pwm() {
+  pinMode(1, OUTPUT);
 }
 
 void loop() {
-  OCR0B = 80;
+//  loop_hardware_pwm_simple_steps();
+  loop_analog_pwm_simple_steps();
+}
+
+void loop_analog_pwm_simple_steps() {
+  analogWrite(1, 50);
+  delay(2000);
+  return;
+  
+  analogWrite(1, 100);
+  delay(2000);
+  analogWrite(1, 150);
+  delay(2000);
+  analogWrite(1, 200);
+  delay(2000);
+  analogWrite(1, 250);
   delay(5000);
+}
+
+void loop_hardware_pwm_simple_steps() {
+  OCR0B = 50;
+  delay(2000);
+  return;
+  
   OCR0B = 100;
   delay(2000);
+  OCR0B = 200;
+  delay(2000);
+  OCR0B = 300;
+  delay(2000);
+  OCR0B = 400;
+  delay(5000);
 }
 
 int mapPotValToPWM(int potVal) {
